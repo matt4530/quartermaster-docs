@@ -1,4 +1,5 @@
 import quartermaster as qm
+import math
 
 # Techniques that are able to make informed decisions about how to change behavior have the potential to allow for degradation that is controlled. Informed decision making can be done by modelling the state of the dependency and also by estimating how it will be.
 
@@ -17,13 +18,12 @@ qm.Server.q2_max = 12
 qm.Server.p2_max = 5
 
 
-# Math here to model dependency
-qm.configure
-
 # Listen in on the dependency
 history_error = []
 history_latency = []
+avg_latency = 1
 old_dependency = qm.dependency
+old_abandon = qm.abandon
 
 
 def history_dependency():
@@ -33,21 +33,36 @@ def history_dependency():
     return result
 
 
-qm.dependency = history_dependency
-
-
-expected_qos_of_live = 1
-
-
-def configure():
+def stat_configure():
     #avg_error = _avg(history_error)
     avg_latency = _avg(history_latency)
 
-    expected_qos_of_live = qm.sigmoid(
-        avg_latency, qm.Client.decay_max, qm.Client.decay_k)
+
+def advanced_abandon(r):
+    expected_max_q1_latency = math.ceil(r.queue_p["q2"] / qm.Server.p2_max)
+    used_latency = qm.clock.ts - r.start_ts
+    cache_t = qm.cache_hit(r)
+
+    value_live = qm.Client.live
+    value_cache = qm.sigmoid(
+        cache_t, qm.Client.cache_age_max, qm.Client.cache_age_k)
+
+    delay_live = qm.sigmoid(
+        avg_latency + expected_max_q1_latency, qm.Client.decay_max, qm.Client.decay_k)
+    delay_cache = qm.sigmoid(
+        used_latency, qm.Client.decay_max, qm.Client.decay_k)
+
+    expected_qos_of_live = value_live * delay_live
+    expected_qos_of_cache = value_cache * delay_cache
+
+    # TODO: Some behavior here.
+    # TODO: account for decreased availability when using expected_qos_of_live
 
 
-qm.configure = configure
+qm.configure = stat_configure
+qm.dependency = history_dependency
+qm.abandon = advanced_abandon
+
 
 qm.warmup()
 qm.run_experiment(200000)
