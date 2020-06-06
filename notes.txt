@@ -1,0 +1,33 @@
+
+
+
+
+
+That sounds like a good idea. What if we represented the cache as a type of dependency - one that can return data that isn't 0 age? If we represent the cache as a dependency, then it could work for out of process or higher-latency caches, or even a bottleneck or failure in the cache itself. This would happen just by tossing the queue and worker pool in front of it. In-memory caches (what we currently have) are just unlimited size workers. Then 
+
+
+
+
+
+We have ignored a large chunk of ways people can configure their queueing (specifically multiclass queueing), but I'm
+
+
+This is true. 
+
+There is certainly a chunk of fault tolerant techniques we have discarded by using a single queue - namely those that use class based queuing.
+
+What are the odds we take a page out of Linux here with accept() and recv(). In our use case, accept grabs the next thing off the queue (in the case of multiple queues, 
+
+
+
+We originally chose 1 queue/server for the single dependency, but does that begs the question if we want to limit the simulator to servers with a single dependency? 
+
+I'm not sure we need to be able to model more than 1 dependency, since I think there are only the following cases:
+with 1 dependency, we can model this
+with 2 dependencies we have:
+the 2nd sequential dependency does    need the first dependency's response. We can model this 
+the 2nd sequential dependency doesn't need the first dependency's response. We can model this by 2 separate simulations and union responses.
+the 2nd parallel dependency does     need the first dependency's response. Impossible scenario.
+the 2nd parallel dependency doesn't need the first dependency's response. 
+
+The QoS function can never be given to the function when more than 1 dependency.
