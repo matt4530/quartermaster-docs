@@ -42,7 +42,7 @@ let sim = new Simulator(m, a, c, [NormalCondition, degraded]);
 run();
 
 async function run() {
-  console.time("sim");
   await sim.run();
-  console.timeEnd("sim")
+  const data = sim.getAll();
+  console.log(data);
 }

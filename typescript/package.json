@@ -2,9 +2,11 @@
   "name": "quartermaster-ts-imp",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
+    "novel": "ts-node src/novel.ts",
+    "compare": "ts-node src/compare.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

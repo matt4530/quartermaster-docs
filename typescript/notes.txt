@@ -1,4 +1,6 @@
+If there are sequential data can we enter the queue for the second one before the first has fulfilled if we estimate we'll get an answer before it is our turn to be processed?
 
+This might also work for the stage design, if we have a remote cache, then we assume nothing, get into the live queue, if we get a response, we can reneg and roll out.
 
 
 
