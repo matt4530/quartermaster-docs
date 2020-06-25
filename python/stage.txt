@@ -1,0 +1,55 @@
+class Stage:
+  # Represents a stage of processing and is generally part of a chain (or tree?) or stages. This default implementation is a queue of requests and a pool of workers that "serve" those requests by calling a dependency, though other implementations are possible as long as the add() and process() methods are present.
+  
+  def __init__(self, queue, dependency, next_stage=None):
+    self.queue = queue
+    self.workers = []
+    self.dependency = dependency
+    self.next_stage = next_stage # or a list, if we want to support trees
+    
+  # The main interface for a Stage. A stage can be anything that provides implmentations for these methods.
+  
+  def add(self, req):
+    req.stages.append(Stage.Stats(self.name)) # see Stats class below
+    
+    if q2.full(Server.q2_max):
+      evict(req)
+    else:
+      self.queue.enqueue(req)
+    
+  def process(self):
+    # Called on every tick of the simulator. 
+    pass
+
+  # Methods that illustrate the possible outcomes of processing for a request and take the appropriate "next" action.
+  
+  def success(self, req):
+    # Called when this stage has completed processing the given request (req) and it is ready to be passed on to the next stage(s), or responded to if there are no next stages
+    
+    if self.next_stage:
+      self.next_stage.add(req)
+  
+    respond(req, 'success')
+    
+  def fail(self, req):
+    # Called when the worker failed to successfully process the request (eg, the call to the dependency failed). The default implementation simply responds with type "fail". Another implementation may add the request back to the queue as a retry strategy.
+    
+    respond(req, 'fail')
+  
+  def respond(self, req, response_type=None):
+    # Represents responding to the client for a given request with the given response_type. Note that it is possible to respond AND continue processing the request (by pushing to the next stage, say)
+    pass
+    
+  def evict(self, req):
+    # Called when the given request (req) is evicted from the queue. This default implementation simply responds to the client with a response of type "failed".
+    
+    respond(req, 'evicted')
+  
+  # A key requirement for this simulator is to maintain, per request, per stage statistics, such as the following. But note that the details of what stats are relevant will depend on the nature of the stage.
+  
+  class Stats:
+    def __init__(self):
+      self.time_in_queue = 0
+      self.time_in_stage = 0
+      self.result = None # one of failure, timeout or success
+      # Etc, etc
