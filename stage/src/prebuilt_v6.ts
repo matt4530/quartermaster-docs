@@ -69,7 +69,7 @@ export class AsideCache extends Cache {
  * elements first.
  */
 export class LRUCache extends Cache {
-  public capacity: number = 50;
+  public capacity: number = 1000;
   protected order: string[] = [];
 
   public set(key: string, value: any): void {
@@ -179,11 +179,16 @@ export class Retry extends WrappedStage {
 }
 
 
-export class Batch extends WrappedStage {
-  workOn(event: Event): Promise<void> {
+/**
+ * Limit the amount of time to wait for a response from the wrapped stage.
+ */
+export class Timeout extends WrappedStage {
+  public timeout: number = 300;
+  async workOn(event: Event): Promise<void> {
+    const tookTooLong = metronome.wait(this.timeout).then(() => { throw "fail" });
+    await Promise.race([tookTooLong, this.wrapped.accept(event)]);
   }
 }
-
 
 
 
