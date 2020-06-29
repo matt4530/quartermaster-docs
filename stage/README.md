@@ -24,6 +24,8 @@ Quartermaster describes these techniques as various configurations of single uni
 \
 `fail()` Called when `workOn()` did throw an error or returned a rejected promise.
 
+[Read more about this at documents.](docs/formalization.md)
+
 ## Framework
 
 A framework is provided to implement these methods and simulate their behavior. Provided with this code is a set of prebuilt code, is some simulation tools.
@@ -52,7 +54,7 @@ async function work() {
 
 The framework's `run()` includes an overview of the events that were simulated.
 
-```js
+```
 Overview of Requests
 ┌─────────┬───────────┬───────┬─────────┬──────────────┬─────────────┐
 │ (index) │   type    │ count │ percent │ mean_latency │ std_latency │
@@ -64,7 +66,7 @@ Overview of Requests
 
 The framework also comes bundled with a `summary()` method, which displays rich output of a set of stages.
 
-```js
+```
 Overview of request time spent in stage
 ┌─────────┬─────────────┬───────────┬──────────┐
 │ (index) │    stage    │ queueTime │ workTime │
@@ -82,6 +84,8 @@ Overview of request behavior in stage
 └─────────┴─────────────┴─────┴────────┴─────────┴──────┘
 ```
 
+#### Custom Statistics
+
 ## Prebuilt Techniques
 
 Some common techniques have been prebuilt using this framework for ease of use.
@@ -95,3 +99,35 @@ Some common techniques have been prebuilt using this framework for ease of use.
 - Retry
 - Circuit Breaker pattern
 - Timeout
+
+## Examples
+
+The `./examples` directory includes some interesting examples with documentation and descriptions.
+
+## Tests
+
+Tests can be run with `npm test`.
+
+All prebuilt components have been placed under tests, located in the `./tests` directory.
+
+### Notes:
+
+Confusing:
+
+- Should we keep event and request separated?
+- Combine stats in event and request?
+
+Stats:
+System wide stats? (snapshots)
+Heap snapshot
+CPU utilization
+Cache hit rate.
+Latency stats.
+
+## TODO:
+
+Finish readme,
+
+finish simulation
+
+write tests

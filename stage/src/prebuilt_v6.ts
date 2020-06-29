@@ -1,4 +1,23 @@
-import { Stage, Event, Response, TimeStats, metronome } from "./v6";
+import { Stage, Event, Response, metronome, IQueue, Worker } from "./v6";
+
+
+
+
+
+
+
+export class NoQueue implements IQueue {
+  enqueue(event: Event): Promise<Worker> {
+    return Promise.resolve(new Worker());
+  }
+  isFull(): boolean {
+    return false;
+  }
+  canWork(): Boolean {
+    return true;
+  }
+}
+
 
 
 
@@ -24,16 +43,6 @@ export class Cache extends WrappedStage {
     if (inCache) {
       return;
     }
-    /*
-    const result = await this.wrapped.add(event)
-    if (result == "success") {
-      this._cache[event.key] = result;
-      return;
-    }
-    throw "fail"
-
-    // which is more succinctly written as
-    */
     const r = await this.wrapped.accept(event);
     this.set(event.key, "success");
   }
@@ -43,6 +52,9 @@ export class Cache extends WrappedStage {
   }
   set(key: string, value: any): void {
     this._cache[key] = value;
+  }
+  get store(): any {
+    return this._cache;
   }
 }
 

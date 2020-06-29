@@ -1,6 +1,8 @@
 import { Metronome } from "./metronome";
 
 /*
+  v6 
+
   Design to disguise timing events as async functions of the 
   Queue.
 
@@ -26,23 +28,63 @@ import { Metronome } from "./metronome";
 
   Thus, the enqueue() method returns a worker.
 */
+
+
+
+/**
+ * A stage responds with a "success", or rejects with a "fail" or throws an 
+ * error.
+ */
 export type Response = "success" | "fail"
+
+/**
+ * An event goes through a stage. In web systems, it could be a web request.
+ * Two events with the same key are identical, but could have originated from
+ * two separate sources.
+ * 
+ * An event keeps track of time spent in various stages.
+ */
 export class Event {
   public time: TimeStats[] = [];
   constructor(public key: string) { }
 }
-class Worker {
+
+/**
+ * A worker of the pool, which processes the individual events. A worker
+ * can only do one work at a time. It is reserved by setting the `event` 
+ * property and unsetting it when the work is done.
+ */
+export class Worker {
   public event: Event | null = null;
 }
-export interface Queue {
+
+/**
+ * The basic queue contract utilized by a stage.
+ */
+export interface IQueue {
+  /**
+   * Adds an event to the queue and promises a worker to fulfill it
+   * @param event The event to be added to the queue
+   * @returns A Promise for a free worker that will serve the event
+   */
   enqueue(event: Event): Promise<Worker>
-  dequeue(): Event | undefined;
+
+  /**
+   * Is the queue full?
+   */
   isFull(): boolean;
+
+  /**
+   * Is there a free worker?
+   */
   canWork(): Boolean
-  getFree(): Promise<Worker>;
 }
 
-class ArrQueue implements Queue {
+
+/**
+ * A FIFO queue implementation.
+ */
+class FIFOQueue implements IQueue {
   private workers: Worker[];
   private arr: Event[] = [];
   constructor(public capacity: number, public numWorkers: number) {
@@ -98,6 +140,9 @@ class ArrQueue implements Queue {
 /**
  * The primary unit of a fault tolerant technique.
  * 
+ * By default, it includes a FIFO queue with fixed capacity and worker pool.
+ * 
+ * 
  * TODO: consider if we can break queue out into a QueuedStage since it 
  * could be superfluous for some techniques.
  * 
@@ -105,11 +150,12 @@ class ArrQueue implements Queue {
  * easier to override.
  */
 export abstract class Stage {
-  protected readonly inQueue: Queue = new ArrQueue(10, 4);
-  public time = new TimeStats();
-  public traffic = new TrafficStats();
+  protected readonly inQueue: IQueue = new FIFOQueue(10, 4);
+  public time: TimeStats;
+  public traffic: TrafficStats;
   constructor() {
-    this.time.stage = this.constructor.name;
+    this.time = TimeStats.fromStage(this);
+    this.traffic = new TrafficStats();
   }
 
   /**
@@ -118,8 +164,7 @@ export abstract class Stage {
    * @param event The event that has been allowed into the stage for processing
    */
   public async accept(event: Event): Promise<Response> {
-    const time = new TimeStats();
-    time.stage = this.constructor.name
+    const time = TimeStats.fromStage(this);
     event.time.push(time)
 
     this.traffic.add++;
@@ -186,14 +231,6 @@ export abstract class Stage {
     throw "fail"
   }
 
-  /**
-   * Called every tick of the simulation, for work that needs to be decoupled 
-   * from events or is time-based.
-   * 
-   * TODO: NOT IMPLEMENTED YET. Need some neat way to call ticks on each stage
-   * without having to pass all stages in?
-   */
-  protected tick(): void { };
 }
 
 
@@ -220,6 +257,12 @@ export class TimeStats {
   public stage: string = "";
   constructor() { }
   // public totalTime ? (this also includes add(), success(), fail())
+
+  static fromStage(stage: Stage): TimeStats {
+    const t = new TimeStats();
+    t.stage = stage.constructor.name;
+    return t;
+  }
 }
 /**
  * Stats used to report on behavior of events
