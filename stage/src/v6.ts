@@ -61,7 +61,7 @@ export class Worker {
 /**
  * The basic queue contract utilized by a stage.
  */
-export interface IQueue {
+export interface Queue {
   /**
    * Adds an event to the queue and promises a worker to fulfill it
    * @param event The event to be added to the queue
@@ -74,25 +74,34 @@ export interface IQueue {
    */
   isFull(): boolean;
 
+  setCapacity(capacity: number): void;
+  getCapacity(): number;
+
   /**
    * Is there a free worker?
    */
   canWork(): Boolean
+
+  setNumWorkers(num: number): void;
+  getNumWorkers(): number;
+
+
 }
 
 
 /**
  * A FIFO queue implementation.
  */
-class FIFOQueue implements IQueue {
-  private workers: Worker[];
+class FIFOQueue implements Queue {
   private arr: Event[] = [];
-  constructor(public capacity: number, public numWorkers: number) {
-    this.workers = [];
-    for (let i = 0; i < numWorkers; i++) {
-      this.workers.push(new Worker());
-    }
+  private workers: Worker[] = [];
+  private capacity: number = 0;
+
+  constructor(capacity: number, numWorkers: number) {
+    this.setCapacity(capacity);
+    this.setNumWorkers(numWorkers);
   }
+
   async enqueue(event: Event): Promise<Worker> {
     this.arr.push(event);
     const self = this;
@@ -102,30 +111,46 @@ class FIFOQueue implements IQueue {
       return self.getFree()
     });
   }
-  dequeue(): Event | undefined {
+  isFull(): boolean {
+    return this.arr.length == this.capacity
+  }
+  canWork(): boolean {
+    return this.workers.some(w => w.event == null);
+  }
+
+
+  setCapacity(capacity: number): void {
+    this.capacity = capacity;
+  }
+  getCapacity(): number {
+    return this.capacity;
+  }
+  setNumWorkers(num: number): void {
+    for (let i = 0; i < num; i++) {
+      this.workers.push(new Worker());
+    }
+  }
+  getNumWorkers(): number {
+    return this.workers.length;
+  }
+
+
+  private dequeue(): Event | undefined {
     return this.arr.shift();
   }
-  peek(): Event | undefined {
+  private peek(): Event | undefined {
     if (this.arr.length == 0)
       return undefined;
     return this.arr[0];
   }
-  isFull(): boolean {
-    return this.arr.length == this.capacity
-  }
-
-  async myTurn(event: Event): Promise<boolean> {
+  private async myTurn(event: Event): Promise<boolean> {
     if (this.peek() == event)
       return true;
 
     const self = this;
     return m.wait(1).then(() => self.myTurn(event));
   }
-
-  canWork(): boolean {
-    return this.workers.some(w => w.event == null);
-  }
-  async getFree(): Promise<Worker> {
+  private async getFree(): Promise<Worker> {
     const worker = this.workers.find(w => w.event == null) as Worker;
     if (worker)
       return worker;
@@ -150,7 +175,7 @@ class FIFOQueue implements IQueue {
  * easier to override.
  */
 export abstract class Stage {
-  protected readonly inQueue: IQueue = new FIFOQueue(10, 4);
+  protected readonly inQueue: Queue = new FIFOQueue(10, 4);
   public time: TimeStats;
   public traffic: TrafficStats;
   constructor() {

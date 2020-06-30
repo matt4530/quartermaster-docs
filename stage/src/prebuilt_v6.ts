@@ -1,4 +1,4 @@
-import { Stage, Event, Response, metronome, IQueue, Worker } from "./v6";
+import { Stage, Event, Response, metronome, Queue, Worker } from "./v6";
 
 
 
@@ -6,7 +6,7 @@ import { Stage, Event, Response, metronome, IQueue, Worker } from "./v6";
 
 
 
-export class NoQueue implements IQueue {
+export class NoQueue implements Queue {
   enqueue(event: Event): Promise<Worker> {
     return Promise.resolve(new Worker());
   }
@@ -16,6 +16,11 @@ export class NoQueue implements IQueue {
   canWork(): Boolean {
     return true;
   }
+
+  setCapacity(capacity: number): void { }
+  getCapacity(): number { return Infinity }
+  setNumWorkers(num: number): void { }
+  getNumWorkers(): number { return Infinity; }
 }
 
 
@@ -117,17 +122,17 @@ export class CircuitBreaker extends WrappedStage {
     await this.workOn(event);
   }
 
-  public success(event: Event): Response {
+  protected success(event: Event): Response {
     this.record(0);
     return super.success(event);
   }
 
-  public fail(event: Event): Response {
+  protected fail(event: Event): Response {
     this.record(1)
     return super.success(event);
   }
 
-  public record(status: number): void {
+  protected record(status: number): void {
     this._ring.push(status);
     if (this._ring.length > this.capacity) {
       this._ring.shift();

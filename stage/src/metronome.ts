@@ -2,7 +2,6 @@ type DelayedCall = {
   tickToExecute: number;
   callback: Function;
 };
-const TAG = "Metronome";
 
 export class Metronome {
   // don't do work when there is nothing to do
@@ -49,7 +48,6 @@ export class Metronome {
   // halt until resolved
   private async sleep() {
     if (this._callbacks.length == 0) {
-      //console.log(TAG, "SLEEPING", this._callbacks.length);
       await new Promise((resolve) => {
         this._sleepResolve = resolve;
       });
@@ -58,15 +56,13 @@ export class Metronome {
 
   private async awake() {
     if (this._sleepResolve) {
-      //console.log(TAG, "WAKING");
       this._sleepResolve();
       this._sleepResolve = null;
     }
   }
 
-  setTimeout(callback: Function, ticks: number, log?: string) {
+  setTimeout(callback: Function, ticks: number) {
     ticks = Math.max(1, Math.floor(ticks));
-    //console.log(TAG, `DELAY ${callback.name} in`, ticks, log);
     this._callbacks.push({
       callback,
       tickToExecute: this._currentTick + ticks,
@@ -74,17 +70,16 @@ export class Metronome {
     this.awake();
   }
 
-  setInterval(callback: Function, ticks: number, log?: string) {
+  setInterval(callback: Function, ticks: number) {
     this.setTimeout(() => {
       callback();
       // schedule next call
-      this.setInterval(callback, ticks, log);
+      this.setInterval(callback, ticks);
     }, ticks);
   }
 
   stop(clear: Boolean = true) {
     if (clear) this._callbacks.length = 0;
-    //console.log(TAG, `stopping with ${this._callbacks.length} callbacks left.`)
     clearInterval(this._keepAlive);
   }
 
