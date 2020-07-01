@@ -5,10 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "v4": "ts-node src/v4.ts",
-    "v6": "node --inspect -r ts-node/register src/driver_v6.ts",
-    "novel": "ts-node src/novel.ts",
-    "compare": "ts-node src/compare.ts",
+    "example:novel": "ts-node examples/novel.ts",
+    "example:manual": "ts-node examples/manual.ts",
+    "example:timed": "ts-node examples/timed.ts",
     "test": "jest"
   },
   "author": "",

@@ -1,11 +1,10 @@
-import { Cache, AvailableLive } from "../src/prebuilt_v6";
-import { Stage, Event } from "../src/v6";
+import { Stage, Event, Cache, AvailableDependency } from "../src/";
 
 
 
 
-function createAvailable(availability: number): AvailableLive {
-  const live = new AvailableLive();
+function createAvailable(availability: number): AvailableDependency {
+  const live = new AvailableDependency();
   live.availability = availability;
   return live;
 }

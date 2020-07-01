@@ -3,7 +3,7 @@ type DelayedCall = {
   callback: Function;
 };
 
-export class Metronome {
+class Metronome {
   // don't do work when there is nothing to do
   _sleepResolve: Function | null;
   // need an interval since node can exit early if no work is being done
@@ -87,3 +87,5 @@ export class Metronome {
     return new Promise((resolve) => this.setTimeout(resolve, ticks));
   }
 }
+
+export const metronome = new Metronome();
