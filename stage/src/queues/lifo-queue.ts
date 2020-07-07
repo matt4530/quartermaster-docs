@@ -6,7 +6,7 @@ type Item = { callback: Function, event: Event };
 /**
  * A FIFO queue implementation.
  */
-export class FIFOQueue implements Queue {
+export class LIFOQueue implements Queue {
   private items: Item[] = [];
   private workers: Worker[] = [];
   private capacity: number = 0;
@@ -25,7 +25,6 @@ export class FIFOQueue implements Queue {
           resolve(data);
       }
       this.add({ event, callback });
-
     })
   }
   isFull(): boolean {
@@ -51,7 +50,7 @@ export class FIFOQueue implements Queue {
       return;
 
 
-    const nextUp: Item = this.items.shift() as Item
+    const nextUp: Item = this.items.pop() as Item
     const worker = this.workers.find(w => w.event == null) as Worker;
     worker.event = nextUp.event;
     nextUp.callback(null, worker);

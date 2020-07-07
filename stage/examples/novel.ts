@@ -1,11 +1,8 @@
-import { Event, Response, Cache, metronome, TimedDependency, run, summary, sigmoid } from "../src";
+import { Event, Response, Cache, metronome, TimedDependency, stageSummary, sigmoid, simulation } from "../src";
 import "colors"
-
-type CacheLine = Record<string, { time: number }>
 
 class SmartStage extends Cache {
   public earlyExitValue: number = 0.3;
-  protected _cache: CacheLine = {}
   protected _latencyRing: number[] = [];
   protected _availabilityRing: number[] = [];
   public capacity: number = 10;
@@ -24,7 +21,7 @@ class SmartStage extends Cache {
     } else {
       // determine if we should wait for response
       const exitEarlyQoS = this.qos(0, 0) * this.earlyExitValue;
-      if (this.earlyExitValue > expectedWaitQos) {
+      if (exitEarlyQoS > expectedWaitQos) {
         return;
       }
     }
@@ -89,8 +86,8 @@ const smart = new SmartStage(live);
 
 novel();
 async function novel() {
-  await run(smart, 30, 20000);
-  summary([smart, live])
+  await simulation.run(smart, 20000);
+  stageSummary([smart, live])
 }
 
 

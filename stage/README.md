@@ -126,11 +126,12 @@ Confusing:
   - System wide stats? (snapshots)
     - Heap snapshot
     - CPU utilization
-    - Cache hit rate.
-    - Latency stats.
+    - Cache hit rate
+    - Latency stats
 
 ## TODO:
 
 - [ ] Finish readme,
 - [ ] finish simulation
 - [ ] write tests
+- [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles

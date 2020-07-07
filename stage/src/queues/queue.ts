@@ -1,4 +1,5 @@
 import { Worker, Event } from "../";
+import { worker } from "cluster";
 
 /**
  * The basic queue contract utilized by a stage.
@@ -22,10 +23,10 @@ export interface Queue {
   /**
    * Is there a free worker?
    */
-  canWork(): Boolean
+  hasFreeWorker(): Boolean
 
   setNumWorkers(num: number): void;
   getNumWorkers(): number;
 
-
+  work(): void;
 }

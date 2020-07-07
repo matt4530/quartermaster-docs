@@ -1,6 +1,6 @@
 
 
-import { TimedDependency, Cache, Event, metronome, summary } from "../src/";
+import { TimedDependency, Cache, Event, metronome, stageSummary } from "../src/";
 
 const live = new TimedDependency();
 live.mean = 150;
@@ -19,6 +19,6 @@ async function manual() {
   const response = await Promise.all([first, second, third])
   metronome.stop(true);
 
-  summary([cache, live])
+  stageSummary([cache, live])
 }
 

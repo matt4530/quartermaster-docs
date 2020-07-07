@@ -86,6 +86,11 @@ class Metronome {
   wait(ticks: number): Promise<void> {
     return new Promise((resolve) => this.setTimeout(resolve, ticks));
   }
+
+  resetCurrentTime(): void {
+    this._currentTick = 0;
+  }
+
 }
 
 export const metronome = new Metronome();

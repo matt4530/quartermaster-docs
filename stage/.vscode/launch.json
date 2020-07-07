@@ -11,7 +11,17 @@
       "skipFiles": ["<node_internals>/**"],
       "runtimeExecutable": "node",
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
-      "args": ["src/driver_v6.ts"],
+      "args": ["src/index.ts"],
+      "outFiles": ["${workspaceFolder}/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Queue Sorting",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "args": ["examples/queue-sorting.ts"],
       "outFiles": ["${workspaceFolder}/**/*.js"]
     }
   ]

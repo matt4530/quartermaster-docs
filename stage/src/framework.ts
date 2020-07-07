@@ -1,56 +1,123 @@
 import { Stage, Event, Response, metronome, standardDeviation } from "."
 
 
+class Simulation {
+  /**
+   * The rate at which events are sent to the starting stage
+   */
+  eventsPer1000Ticks: number = 50;
 
-/**
+  /**
+   * The mean of keys used when creating new Events
+   */
+  keyspaceMean: number = 1000;
+
+  /**
+   * The standard deviation of keys used when creating new Events
+   */
+  keyspaceStd: number = 50;
+
+
+  /**
  * Execute a simulation
  * 
  * TODO: Move to own class, so we can set properties on this later, such as changing rates mid-simulation,
  * setting the keyspace, etc.
  * 
  * @param stage The stage where events will be inserted
- * @param eventsPer1000Ticks The rate of events (i.e. rps)
- * @param events The number of events
+ * @param numEventsToSend The number of events to be sent
  */
-export async function run(stage: Stage, eventsPer1000Ticks: number, numEventsToSend: number): Promise<void> {
-  const delta = 1 / eventsPer1000Ticks;
-  metronome.start();
+  async run(stage: Stage, numEventsToSend: number): Promise<Event[]> {
+    const delta = 1 / this.eventsPer1000Ticks;
+    metronome.start();
 
-  const pendingEvents = await sendEvents(stage, delta, numEventsToSend)
-  const events = await Promise.all(pendingEvents);
-  metronome.stop();
-  report(events);
-}
+    const pendingEvents = await this.sendEvents(stage, numEventsToSend)
+    const events = await Promise.all(pendingEvents);
 
-
-async function sendEvents(stage: Stage, tickDelta: number, numEventsToSend: number): Promise<Promise<Event>[]> {
-  const events: Promise<Event>[] = [];
-  let eventsSent = 0;
-
-  while (eventsSent < numEventsToSend) {
-    eventsSent++;
-    events.push(createEvent(stage));
-    await metronome.wait(tickDelta);
+    metronome.stop();
+    //eventSummary(events);
+    return events;
   }
 
-  return events;
+  /**
+   * A helper method to send events at the correct rate to the stage
+   * @param stage 
+   * @param numEventsToSend 
+   */
+  private async sendEvents(stage: Stage, numEventsToSend: number): Promise<Promise<Event>[]> {
+    const events: Promise<Event>[] = [];
+    let eventsSent = 0;
+
+    while (true) {
+      const tickDelta = 1000 / this.eventsPer1000Ticks;
+
+      if (tickDelta < 1) {
+        // fire off multiple events per tick
+
+        let eventsToSendThisTick = Math.floor(1 / tickDelta);
+        if (eventsSent + eventsToSendThisTick > numEventsToSend) {
+          eventsToSendThisTick = numEventsToSend - eventsSent;
+        }
+        events.push(...this.createEventBatch(stage, eventsToSendThisTick))
+        eventsSent += eventsToSendThisTick;
+
+        if (eventsSent >= numEventsToSend)
+          return events;
+
+        // go to next tick
+        await metronome.wait(1);
+      } else {
+        // fire off a single event per tick, might need to wait somemore.
+        events.push(this.createEvent(stage));
+        eventsSent++;
+
+        if (eventsSent >= numEventsToSend)
+          return events;
+
+        await metronome.wait(tickDelta);
+      }
+    }
+  }
+
+  /**
+   * A helper method to send a num events immediately to a stage
+   * @param stage 
+   * @param num 
+   */
+  private createEventBatch(stage: Stage, num: number): Promise<Event>[] {
+    const events: Promise<Event>[] = [];
+    for (let i = 0; i < num; i++) {
+      events.push(this.createEvent(stage));
+    }
+    return events;
+  }
+
+  private createEvent(stage: Stage): Promise<Event> {
+    const event = new Event("e-" + Math.floor(Math.random() * 500));
+    const time = event.responseTime;
+    time.startTime = metronome.now();
+
+    return stage.accept(event).then(response => {
+      event.response = response as Response;
+      time.endTime = metronome.now();
+      return event;
+    }).catch(error => {
+      event.response = error as Response;
+      time.endTime = metronome.now();
+      return event
+    });
+  }
+
+  //TODO:
+  /*async runForSomeTicks(stage: Stage, numTicks: number): Promise<void> {
+  }*/
 }
 
-function createEvent(stage: Stage): Promise<Event> {
-  const event = new Event("hi" + Math.floor(Math.random() * 500));
-  const time = event.responseTime;
-  time.startTime = metronome.now();
+export const simulation = new Simulation();
 
-  return stage.accept(event).then(response => {
-    event.response = response as Response;
-    time.endTime = metronome.now();
-    return event;
-  }).catch(error => {
-    event.response = error as Response;
-    time.endTime = metronome.now();
-    return event
-  });
-}
+
+
+
 
 
 /**
@@ -64,7 +131,23 @@ function createEvent(stage: Stage): Promise<Event> {
  * 4. % slow failures? (interesting?)
  * @param events The events that have completed the simulation
  */
-function report(events: Event[]): void {
+export function eventSummary(events: Event[]): void {
+  const summary = createEventSummary(events);
+
+  console.log("Overview of Events");
+  console.table(summary);
+}
+
+
+type Summary = ResponseData[];
+type ResponseData = {
+  type: Response;
+  count: number;
+  percent: string;
+  mean_latency: string;
+  std_latency: string;
+}
+function createEventSummary(events: Event[]): Summary {
   const failTimes: number[] = [];
   const successTimes: number[] = [];
 
@@ -91,24 +174,21 @@ function report(events: Event[]): void {
   const precision = 3;
   const table = [
     {
-      type: "success",
+      type: "success" as Response,
       count: success,
       percent: (success / events.length).toFixed(precision),
       mean_latency: successAvg.toFixed(precision),
       std_latency: successStdDevLatency.toFixed(precision)
     },
     {
-      type: "fail",
+      type: "fail" as Response,
       count: fail,
       percent: (fail / events.length).toFixed(precision),
       mean_latency: failAvg.toFixed(precision),
       std_latency: failStdDevLatency.toFixed(precision)
-    },
-
+    }
   ]
-
-  console.log("\nOverview of Events");
-  console.table(table);
+  return table;
 }
 
 /**
@@ -117,7 +197,7 @@ function report(events: Event[]): void {
  * 
  * @param stages A stage or an array of stages to report stats about
  */
-export function summary(stages: Stage | Stage[]): void {
+export function stageSummary(stages: Stage | Stage[]): void {
   const arr = Array.isArray(stages) ? stages : [stages]
   const times = arr.map(s => s.time);
   const traffic = arr.map(s => ({ stage: s.time.stage, ...s.traffic }));
@@ -127,5 +207,36 @@ export function summary(stages: Stage | Stage[]): void {
   console.table(traffic);
 }
 
+export function eventCompare(a: Event[], b: Event[]): void {
+  const aSummary = createEventSummary(a);
+  const bSummary = createEventSummary(b);
 
+  const aSuccess = aSummary[0];
+  const bSuccess = bSummary[0];
+
+  const aFail = aSummary[1];
+  const bFail = bSummary[1];
+
+
+  const precision = 3;
+  const diff: Summary = [
+    {
+      type: "success" as Response,
+      count: bSuccess.count - aSuccess.count,
+      percent: (parseFloat(bSuccess.percent) - parseFloat(aSuccess.percent)).toFixed(precision),
+      mean_latency: (parseFloat(bSuccess.mean_latency) - parseFloat(aSuccess.mean_latency)).toFixed(precision),
+      std_latency: (parseFloat(bSuccess.std_latency) - parseFloat(aSuccess.std_latency)).toFixed(precision),
+    },
+    {
+      type: "fail" as Response,
+      count: bFail.count - aFail.count,
+      percent: (parseFloat(bFail.percent) - parseFloat(aFail.percent)).toFixed(precision),
+      mean_latency: (parseFloat(bFail.mean_latency) - parseFloat(aFail.mean_latency)).toFixed(precision),
+      std_latency: (parseFloat(bFail.std_latency) - parseFloat(aFail.std_latency)).toFixed(precision),
+    }
+  ]
+
+  console.log("\nDiff of the events, (B - A):");
+  console.table(diff);
+}
 

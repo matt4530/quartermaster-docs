@@ -1,18 +1,24 @@
 import { WrappedStage } from "./wrapped-stage";
-import { Event } from "../";
+import { Event, metronome } from "../";
 
 /**
  * A generic unbounded cache.
+ * 
+ * Stored in the cache is the time key was last updated.
  */
+
+type CacheLine = Record<string, CacheItem>
+type CacheItem = { time: number };
+
 export class Cache extends WrappedStage {
-  protected _cache: any = {}
+  protected _cache: CacheLine = {}
   async workOn(event: Event): Promise<void> {
     const inCache = !!this.get(event.key);
     if (inCache) {
       return;
     }
     const r = await this.wrapped.accept(event);
-    this.set(event.key, "success");
+    this.set(event.key, { time: metronome.now() });
   }
 
   get(key: string): any {

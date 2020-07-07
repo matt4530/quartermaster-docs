@@ -21,7 +21,7 @@ import {
  * easier to override.
  */
 export abstract class Stage {
-  protected readonly inQueue: Queue = new NoQueue();
+  public inQueue: Queue = new NoQueue();
   public time: TimeStats;
   public traffic: TrafficStats;
   constructor() {
@@ -49,8 +49,6 @@ export abstract class Stage {
     time.queueTime = metronome.now() - t;
     this.time.queueTime += time.queueTime;
 
-
-    worker.event = event;
     try {
       this.traffic.workOn++;
       const t = metronome.now();
@@ -61,10 +59,16 @@ export abstract class Stage {
       this.traffic.success++;
       return this.success(event);
     } catch (err) {
+      if (err != "fail") {
+        console.error(`Unexpected error thrown (not 'fail') in [Stage ${this.constructor.name}]:`);
+        console.error(err);
+        console.error("\n");
+      }
+
       this.traffic.fail++;
       return this.fail(event);
     } finally {
-      worker.event = null
+      worker.free();
     }
   }
 

@@ -8,6 +8,9 @@
     "example:novel": "ts-node examples/novel.ts",
     "example:manual": "ts-node examples/manual.ts",
     "example:timed": "ts-node examples/timed.ts",
+    "example:queue-sorting": "ts-node examples/queue-sorting.ts",
+    "example:variable-traffic": "ts-node examples/variable-traffic.ts",
+    "example:aggressive-timeouts": "ts-node examples/aggressive-timeouts.ts",
     "test": "jest"
   },
   "author": "",
