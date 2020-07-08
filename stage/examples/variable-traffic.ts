@@ -5,7 +5,6 @@ import { TimedDependency, stageSummary, simulation, LRUCache, metronome, eventSu
  * A variation on the timed example, where the rate of events being sent and
  * the response time of the dependency is changed at runtime.
  */
-
 const live = new TimedDependency();
 live.availability = 0.995;
 live.mean = 150;

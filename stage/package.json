@@ -11,6 +11,7 @@
     "example:queue-sorting": "ts-node examples/queue-sorting.ts",
     "example:variable-traffic": "ts-node examples/variable-traffic.ts",
     "example:aggressive-timeouts": "ts-node examples/aggressive-timeouts.ts",
+    "example:custom-statistics": "ts-node examples/custom-statistics.ts",
     "test": "jest"
   },
   "author": "",

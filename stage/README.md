@@ -41,24 +41,44 @@ A framework is provided to implement these methods and simulate their behavior. 
 A sample usage, representing a call to a remote dependency with a cache:
 
 ```typescript
-import { TimedLive, Cache, run, summary } from "....";
+import {
+  TimedDependency,
+  stageSummary,
+  simulation,
+  LRUCache,
+  eventSummary,
+} from "../src";
 
-const live = new TimedLive();
+/**
+ * The timed example is the basic unit of several other examples. It features
+ * a timed dependency, which might represent a database and a cache that sits
+ * in front of the dependency.
+ */
+
+const live = new TimedDependency();
+live.availability = 0.995;
 live.mean = 150;
 live.std = 20;
 
-const cache = new Cache(live);
+const cache = new LRUCache(live);
+cache.ttl = 30000;
+cache.capacity = 500;
+
+simulation.keyspaceMean = 999;
+simulation.keyspaceStd = 90;
+simulation.eventsPer1000Ticks = 40;
 
 work();
 async function work() {
-  await run(cache, 30, 5);
-  summary([cache, live]);
+  const events = await simulation.run(cache, 20000);
+  eventSummary(events);
+  stageSummary([cache, live]);
 }
 ```
 
 ### Rich Output
 
-The framework's `run()` includes an overview of the events that were simulated.
+The framework's `eventSummary([...events])` displays a quick summary of statistics of the events.
 
 ```
 Overview of Events
@@ -70,14 +90,14 @@ Overview of Events
 └─────────┴───────────┴───────┴─────────┴──────────────┴─────────────┘
 ```
 
-The framework also comes bundled with a `summary()` method, which displays rich output of a set of stages.
+The framework also comes bundled with `stageSummary([...stages])` methods, which displays rich output of a set of stages.
 
 ```
 Overview of event time spent in stage
 ┌─────────┬─────────────┬───────────┬──────────┐
 │ (index) │    stage    │ queueTime │ workTime │
 ├─────────┼─────────────┼───────────┼──────────┤
-│    0    │   'Cache'   │     7     │   604    │
+│    0    │ 'LRUCache'  │     7     │   604    │
 │    1    │ 'TimedLive' │    10     │   592    │
 └─────────┴─────────────┴───────────┴──────────┘
 
@@ -85,22 +105,29 @@ Overview of event behavior in stage
 ┌─────────┬─────────────┬─────┬────────┬─────────┬──────┐
 │ (index) │    stage    │ add │ workOn │ success │ fail │
 ├─────────┼─────────────┼─────┼────────┼─────────┼──────┤
-│    0    │   'Cache'   │  5  │   5    │    4    │  1   │
+│    0    │ 'LRUCache'  │  5  │   5    │    4    │  1   │
 │    1    │ 'TimedLive' │  5  │   5    │    4    │  1   │
 └─────────┴─────────────┴─────┴────────┴─────────┴──────┘
 ```
 
 ### Prebuilt Techniques
 
-Some common techniques have been prebuilt using this framework for ease of use.
+You don't need to code your system up in the framework to use it. Quartermaster comes with a set of prebuilt techniques that are easily configured. If they don't cover all of your requirements, we've provided examples to help build your own techniques.
 
 - Caching
-  - Unbounded
-  - LRU
-  - Background Cache
-- Retry
-- Circuit Breaker pattern
-- Timeout
+  - Unbounded: An unlimited size cache
+  - LRU: A fixed capacity cache, that evicts the least-recently-used elements.
+  - Background Cache: A cache which serves inbound requests strictly from cached data, and refreshes the requested data in the background.
+- Circuit Breaker Pattern:
+- Retry: Attempt multiple times upon a failure.
+- Timeout: Limit how much time is being spent working on an event.
+
+Additionally, we've included some prebuilt stages to simulate the actual dependency (such as a database, another remote dependency, or even a 3rd party API) that is being called.
+
+- AvailableDependency: Responds immediately with some availability.
+- TimedDependency: Responds with some availability and latency distributions.
+
+Our [examples](docs/examples.md) show you many of these in action.
 
 ### Custom Statistics
 
@@ -122,7 +149,7 @@ Confusing:
 
 - [x] Should we keep event and request separated? XXXXX
 - [x] Combine stats in event and request?
-- [ ] Stats:
+- [x] Stats:
   - System wide stats? (snapshots)
     - Heap snapshot
     - CPU utilization
@@ -131,7 +158,7 @@ Confusing:
 
 ## TODO:
 
-- [ ] Finish readme,
-- [ ] finish simulation
+- [ ] Finish readme
+- [x] finish simulation
 - [ ] write tests
 - [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles
