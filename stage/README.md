@@ -16,7 +16,7 @@ A formalization of graceful degradation techniques, and framework to simulate th
 
 A system that is fault tolerant is resistant to faults, often by allowing the system to degrade gracefully instead of failing immediately. There are certain techniques that are commonly used in industry, such as caching, retries, short timeouts, and the circuit breaker pattern.
 
-Quartermaster describes these techniques as various configurations of single unit: the stage. A stage contains a queue and several methods which can be overwritten: `add()`, `workOn()`, `tick()`, `success()`, and `fail()`. Events are the basic units that pass through stages. In a web system, these events are analogous be http requests.
+Quartermaster describes these techniques as various configurations of single unit: the stage. A stage contains a queue and several methods which can be overwritten: `add()`, `workOn()`, `success()`, and `fail()`. Events are the basic units that pass through stages. In a web system, these events are analogous be http requests.
 
 `add()` An admission control function, called before the event enters the queue.
 \
@@ -30,7 +30,7 @@ Quartermaster describes these techniques as various configurations of single uni
 
 ## Framework
 
-A framework is provided to implement these methods and simulate their behavior. Provided with this code is a set of prebuilt code, is some simulation tools.
+A framework is provided to implement these methods and simulate their behavior. Provided with this code is a set of prebuilt code, is some simulation tools. Since this repository is a typescript implementation of the framework, we've included a brief overview here. You can [read more in-depth about the Quartermaster framework](docs/framework.md) in our docs.
 
 ### Installation
 
@@ -118,7 +118,7 @@ You don't need to code your system up in the framework to use it. Quartermaster 
   - Unbounded: An unlimited size cache
   - LRU: A fixed capacity cache, that evicts the least-recently-used elements.
   - Background Cache: A cache which serves inbound requests strictly from cached data, and refreshes the requested data in the background.
-- Circuit Breaker Pattern:
+- Circuit Breaker Pattern: Don't wait for an operation that will (or is likely to) fail.
 - Retry: Attempt multiple times upon a failure.
 - Timeout: Limit how much time is being spent working on an event.
 
@@ -130,6 +130,8 @@ Additionally, we've included some prebuilt stages to simulate the actual depende
 Our [examples](docs/examples.md) show you many of these in action.
 
 ### Custom Statistics
+
+While the quartermaster framework looks at measuring and evaluating graceful degradation, it is possible that you want to measure additional properties or analyze other behavior of the system. The framework is flexible enough to support doing this, and we've provided an example which includes a few ways to do so. See [the custom statistics example](docs/examples.md).
 
 ## Examples
 
@@ -155,6 +157,7 @@ Confusing:
     - CPU utilization
     - Cache hit rate
     - Latency stats
+- [ ] QoS????
 
 ## TODO:
 

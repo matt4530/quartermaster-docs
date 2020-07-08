@@ -79,7 +79,6 @@ export abstract class Stage {
    */
   protected async add(event: Event): Promise<void> {
     if (this.inQueue.isFull()) {
-      // not this.fail(), since workOn hasn't happened?
       return Promise.reject("fail");
     }
   }
