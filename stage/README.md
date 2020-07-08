@@ -161,7 +161,17 @@ Confusing:
 
 ## TODO:
 
-- [ ] Finish readme
+- [ ] Readme
+  - [x] Main
+  - [x] Formalization
+  - [x] Framework
+  - [ ] Examples
 - [x] finish simulation
-- [ ] write tests
-- [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles
+- [ ] Tests
+  - [x] Queues
+  - [x] Caches
+  - [ ] Stages
+  - [ ] Simulator
+  - [ ] Metronome
+
+* [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles
