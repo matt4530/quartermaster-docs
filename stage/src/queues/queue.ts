@@ -27,5 +27,9 @@ export interface Queue {
   setNumWorkers(num: number): void;
   getNumWorkers(): number;
 
+  /**
+   * Attempts to process an element from the queue, if there is something in 
+   * the queue and if there is a free worker.
+   */
   work(): void;
 }

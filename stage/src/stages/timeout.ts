@@ -7,7 +7,9 @@ import { Event, metronome } from "../";
 export class Timeout extends WrappedStage {
   public timeout: number = 300;
   async workOn(event: Event): Promise<void> {
-    const tookTooLong = metronome.wait(this.timeout).then(() => { throw "fail"; });
+    const tookTooLong = metronome.wait(this.timeout).then(() => {
+      throw "fail"
+    });
     await Promise.race([tookTooLong, this.wrapped.accept(event)]);
   }
 }
