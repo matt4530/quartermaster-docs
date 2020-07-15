@@ -1,4 +1,4 @@
-import { Event, Response, Cache, metronome, TimedDependency, stageSummary, sigmoid, simulation } from "../src";
+import { Event, Response, Cache, metronome, TimedDependency, stageSummary, sigmoid, simulation, eventSummary } from "../src";
 import "colors"
 
 class SmartStage extends Cache {
@@ -86,7 +86,8 @@ const smart = new SmartStage(live);
 
 novel();
 async function novel() {
-  await simulation.run(smart, 20000);
+  const events = await simulation.run(smart, 20000);
+  eventSummary(events);
   stageSummary([smart, live])
 }
 

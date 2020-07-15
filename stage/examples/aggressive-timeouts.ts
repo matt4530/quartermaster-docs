@@ -41,7 +41,7 @@ const timeout = new Timeout(live);
 timeout.timeout = 50;
 
 const retry = new Retry(timeout);
-retry.count = 2;
+retry.attempts = 2;
 
 
 

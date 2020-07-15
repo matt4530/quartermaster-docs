@@ -1,22 +1,12 @@
 # Quartermaster
 
-A formalization of graceful degradation techniques, and framework to simulate their behavior.
+A framework to model and simulate graceful degradation techniques.
 
-## Table of Contents
+## Model
 
-**[1. Formalization](#Formalization)**
+A system that is fault tolerant is resistant to faults, often by allowing the system to degrade gracefully instead of failing immediately. There are certain techniques that are commonly used in industry to this end, such as caching, retries, short timeouts, and the circuit breaker pattern.
 
-**[2. Framework](#Framework)**
-
-**[3. Examples](#Examples)**
-
-**[4. Tests](#Tests)**
-
-## Formalization
-
-A system that is fault tolerant is resistant to faults, often by allowing the system to degrade gracefully instead of failing immediately. There are certain techniques that are commonly used in industry, such as caching, retries, short timeouts, and the circuit breaker pattern.
-
-Quartermaster describes these techniques as various configurations of single unit: the stage. A stage contains a queue and several methods which can be overwritten: `add()`, `workOn()`, `success()`, and `fail()`. Events are the basic units that pass through stages. In a web system, these events are analogous be http requests.
+In Quartermaster a user can describe a system's structure and the fault-tolerant techniques it uses as various configurations of a single unit: the stage. A stage contains a queue and several methods which can be overwritten: `add()`, `workOn()`, `success()`, and `fail()`. Events are the basic units that pass through stages. In a web system, these events are analogous be http requests.
 
 `add()` An admission control function, called before the event enters the queue.
 \
@@ -26,7 +16,7 @@ Quartermaster describes these techniques as various configurations of single uni
 \
 `fail()` Called when `workOn()` did throw an error or returned a rejected promise.
 
-[Read more about the formalization of Quartermaster.](docs/formalization.md)
+[Read more about the model of Quartermaster.](docs/model.md)
 
 ## Framework
 
@@ -43,16 +33,22 @@ A sample usage, representing a call to a remote dependency with a cache:
 ```typescript
 import {
   TimedDependency,
-  stageSummary,
-  simulation,
   LRUCache,
+  simulation,
   eventSummary,
-} from "../src";
+  stageSummary,
+} from "...";
 
 /**
  * The timed example is the basic unit of several other examples. It features
- * a timed dependency, which might represent a database and a cache that sits
- * in front of the dependency.
+ * a timed dependency with available 99.5% of the time and a normally
+ * distributed latency with mean = 150 ticks and standard deviation = 20 ticks.
+ * Additionally, there is an LRU cache that can contain up to 500 cached items
+ * with a max age of 30,000 ticks.
+ *
+ * The timed dependecy stage could represent a database and the lru cache
+ * stage could represent a small, in memory cache that serves to speed up
+ * responses to commonly queried items.
  */
 
 const live = new TimedDependency();
@@ -63,6 +59,15 @@ live.std = 20;
 const cache = new LRUCache(live);
 cache.ttl = 30000;
 cache.capacity = 500;
+
+/**
+ * The keyspace is defined with normally distributed keys with a mean of 999
+ * and a standard deviation of 90. Additionally, the simulation will push
+ * 40 events every 1,000 ticks through the stages.
+ *
+ * This keyspace could represent a service which responds to a (relatively)
+ * small set of distinct events at the rate of 40 requests per second.
+ */
 
 simulation.keyspaceMean = 999;
 simulation.keyspaceStd = 90;
@@ -157,13 +162,13 @@ Confusing:
     - CPU utilization
     - Cache hit rate
     - Latency stats
-- [ ] QoS????
+- [ ] More detailed usage steps? i.e. create a file
 
 ## TODO:
 
 - [ ] Readme
   - [x] Main
-  - [x] Formalization
+  - [x] Model
   - [x] Framework
   - [ ] Examples
 - [x] finish simulation
@@ -173,5 +178,8 @@ Confusing:
   - [ ] Stages
   - [ ] Simulator
   - [ ] Metronome
-
-* [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles
+- [ ] Add custom column method to summary. i.e. just list of functions to include as additional columns in the table.
+- [ ] Go to website, grab document type for latex 4 page doc, read couple papers, couple videos. Send this paper to Dr. Sillito when mature.
+- [ ] Tech Transfer
+- [ ] tool for calculating gamma distribution from 50, 90, 95th percentiles
+- [ ] publish NPM, update documentation

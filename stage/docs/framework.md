@@ -2,7 +2,7 @@
 
 A fault tolerant technique can be generalized as a stage, consisting of a queue for inbound events, a worker pool to process events from the queue, and a set of overloadable event driven methods.
 
-This document describes a typescript implementation of the Quartermaster model. To see the model itself, [read up on the formalization](framework.md). To view the framework in use, [check out our examples](framework.md).
+This document describes a typescript implementation of the Quartermaster model. To see the model itself, [read up on the description](model.md). To view the framework in use, [check out our examples](framework.md).
 
 ## Table of Contents
 

@@ -1,13 +1,20 @@
 
 
-import { TimedDependency, Cache, Event, metronome, stageSummary } from "../src/";
+import { TimedDependency, LRUCache, Event, metronome, stageSummary } from "../src/";
+
+/**
+ * A variation of the timed example. Instead of events being sent by the 
+ * simulation, events are manually sent to the stage.
+ */
 
 const live = new TimedDependency();
+live.availability = 0.995;
 live.mean = 150;
 live.std = 20;
 
-const cache = new Cache(live);
-
+const cache = new LRUCache(live);
+cache.ttl = 30000;
+cache.capacity = 500
 
 manual();
 async function manual() {
